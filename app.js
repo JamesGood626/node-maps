@@ -1,14 +1,23 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-let bodyParser = require('body-parser')
-var logger = require('morgan');
-let cors = require('cors')
-let mongoose = require('mongoose')
-let passport = require('passport')
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser')
+const logger = require('morgan');
+const cookieSession = require('cookie-session')
+const cors = require('cors')
+const mongoose = require('mongoose')
+const passport = require('passport')
+const initializePassport = require('./passport/passport')
+// const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/user/users');
+const testRouter = require('./routes/test/test');
 
 require('dotenv').config()
+
+// TODO: Needs to be secret
+const COOKIE_KEY = process.env.COOKIE_KEY
+
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true })
   .then(() => {
@@ -18,14 +27,24 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true })
     console.log('Error: ', error)
   })
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/user/users');
-
 var app = express();
 
+app.use(cookieSession({
+  name: 'session',
+  keys: [COOKIE_KEY],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
+
+// TODO: delete all view related files/dirs/dependencies
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'ejs');
+// app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(passport.initialize())
+initializePassport(passport)
 
 app.use(cors())
 app.use(logger('dev'));
@@ -34,10 +53,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// app.use('/', indexRouter);
+app.use('/api/users/', usersRouter);
+app.use("/api/test", testRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -52,7 +71,6 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
 });
 
 module.exports = app;

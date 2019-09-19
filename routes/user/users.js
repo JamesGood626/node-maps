@@ -10,8 +10,8 @@ router.get('/', passport.authenticate('jwt', {session: false}), function(req, re
   res.send('User API');
 });
 
-router.post('/sign-up', userController.signup)
+router.post('/signup', userController.signup)
 
-router.post('/sign-in', userController.signin)
+router.post('/signin', userController.signin)
 
 module.exports = router;
