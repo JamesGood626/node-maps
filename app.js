@@ -12,6 +12,7 @@ const initializePassport = require('./passport/passport')
 // const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/user/users');
 const testRouter = require('./routes/test/test');
+const eventsRouter = require('./routes/events/events')
 
 require('dotenv').config()
 
@@ -57,6 +58,7 @@ app.use(bodyParser.json())
 // app.use('/', indexRouter);
 app.use('/api/users/', usersRouter);
 app.use("/api/test", testRouter)
+app.use("/api/events", eventsRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
