@@ -9,4 +9,4 @@ const AddressSchema = new Schema({
   zip: { type: String, default: "", required: true }
 });
 
-export default AddressSchema;
+module.exports = AddressSchema;

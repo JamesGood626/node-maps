@@ -1,42 +1,44 @@
-const createError = require('http-errors');
-const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser')
-const logger = require('morgan');
-const cookieSession = require('cookie-session')
-const cors = require('cors')
-const mongoose = require('mongoose')
-const passport = require('passport')
-const initializePassport = require('./passport/passport')
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const logger = require("morgan");
+const cookieSession = require("cookie-session");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const passport = require("passport");
+const initializePassport = require("./passport/passport");
 // const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/user/users');
-const testRouter = require('./routes/test/test');
-const eventsRouter = require('./routes/events/events')
+const usersRouter = require("./routes/user/users");
+const eventsRouter = require("./routes/events/events");
 
-require('dotenv').config()
+require("dotenv").config();
 
-// TODO: Needs to be secret
-const COOKIE_KEY = process.env.COOKIE_KEY
-
-
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true })
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
   .then(() => {
-    console.log('MongoDB Connected')
+    // TODO: check if not in test env to log this.
+    // console.log("MongoDB Connected");
   })
   .catch(error => {
-    console.log('Error: ', error)
-  })
+    console.log("Error: ", error);
+  });
 
 var app = express();
 
-app.use(cookieSession({
-  name: 'session',
-  keys: [COOKIE_KEY],
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [process.env.COOKIE_KEY],
 
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+    // Cookie Options
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  })
+);
 
 // TODO: delete all view related files/dirs/dependencies
 // view engine setup
@@ -44,21 +46,21 @@ app.use(cookieSession({
 // app.set('view engine', 'ejs');
 // app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(passport.initialize())
-initializePassport(passport)
+app.use(passport.initialize());
+initializePassport(passport);
 
-app.use(cors())
-app.use(logger('dev'));
+app.use(cors());
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
+app.get("/", (req, res) => res.json({ message: "Got response from GET /" }));
 // app.use('/', indexRouter);
-app.use('/api/users/', usersRouter);
-app.use("/api/test", testRouter)
-app.use("/api/events", eventsRouter)
+app.use("/api/users/", usersRouter);
+app.use("/api/events", eventsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -69,7 +71,7 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
   res.status(err.status || 500);
