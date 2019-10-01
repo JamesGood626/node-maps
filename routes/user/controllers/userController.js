@@ -35,6 +35,7 @@ module.exports = {
                         })
                         const createdUser = await newUser.save()
                         const payload = {
+                            id: createdUser.id,
                             username: createdUser.username
                         }
                         jwt.sign(payload, process.env.SECRET_KEY, {
@@ -47,6 +48,7 @@ module.exports = {
                                 res.json(error)
                             } else {
                                 let success = {}
+                                success.id = createdUser._id
                                 success.username = createdUser.username
                                 success.message = SIGNUP_SUCCESS_MESSAGE
                                 setSessionRememberToken(req, token)

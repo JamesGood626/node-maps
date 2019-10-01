@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const AddressSchema = require("./Address");
-const CommentSchema = require("./Comment");
+const {CommentSchema} = require("./Comment");
 
 // NOTE: Dates must be updated like so in order to be
 // successfully persisted:
@@ -32,7 +32,7 @@ const EventSchema = new Schema({
   address: AddressSchema,
   latitude: { type: Number, default: "", required: true },
   longitude: { type: Number, default: "", required: true },
-  comment: [CommentSchema],
+  comments: [CommentSchema],
   // tags <- reference Tag or were we running w/ [Tags]
   user: { type: "ObjectId", ref: "User" },
   eventDate: { type: Date, default: "", required: true },

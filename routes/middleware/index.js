@@ -14,8 +14,9 @@ const authorizeRequest = (req, res, next) => {
       });
     }
     console.log("got the username: ", decoded.username);
+    console.log("got the id: ", decoded.id);
     // TODO:
-    req.currentUser = decoded.username;
+    req.currentUser = { id: decoded.id, username: decoded.username };
   });
 
   console.log("calling next to pass into next controller");

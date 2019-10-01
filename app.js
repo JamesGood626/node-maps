@@ -11,7 +11,7 @@ const passport = require("passport");
 const initializePassport = require("./passport/passport");
 // const indexRouter = require('./routes/index');
 const usersRouter = require("./routes/user/users");
-const eventsRouter = require("./routes/events/events");
+const eventsRouter = require("./routes/events");
 
 require("dotenv").config();
 
@@ -59,7 +59,7 @@ app.use(bodyParser.json());
 
 app.get("/", (req, res) => res.json({ message: "Got response from GET /" }));
 // app.use('/', indexRouter);
-app.use("/api/users/", usersRouter);
+app.use("/api/users", usersRouter);
 app.use("/api/events", eventsRouter);
 
 // catch 404 and forward to error handler

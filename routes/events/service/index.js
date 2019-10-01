@@ -1,15 +1,39 @@
 const Event = require("../model/Event");
+const { Comment } = require("../model/Comment")
+const { compose } = require('ramda')
 
 const timestamps = () => {
   const date = new Date();
   return { createdAt: date, updatedAt: date };
 };
 
-const newEventData = (eventData, timestamps) => ({
+const newEventData = ({ eventData, currentUser, timestamps }) => ({
   ...eventData,
   ...timestamps,
-  comment: { ...eventData.comment, ...timestamps }
-});
+  user: currentUser.id,
+  comments: [{ ...eventData.comment, ...timestamps, user: currentUser.id }]
+})
+
+const newCommentData = ({ commentData, currentUser, timestamps }) => ({
+  ...commentData,
+  ...timestamps,
+  user: currentUser.id
+})
+
+const returnEventData = ({ _id, name, latitude, longitude, eventDate, address, comment}) => ({
+  _id,
+  name,
+  latitude,
+  longitude,
+  eventDate,
+  address,
+  comment
+})
+
+const createNewEvent = async ({ eventData, currentUser }) => {
+  const event = new Event(newEventData({ eventData, currentUser, timestamps: timestamps() }))
+  return await event.save()
+};
 
 // req.body for createEvent should look something like:
 // {
@@ -34,14 +58,47 @@ const newEventData = (eventData, timestamps) => ({
 //   updatedAt: new Date()
 // }
 // But we'll spread timestamps on the body, and nested comment object.
-const createEvent = async (req, res, next) => {
-  const { body } = req;
-  console.log("createEvents' req.body ", body);
-  const event = new Event(newEventData(body, timestamps()));
-  const result = await event.save();
-  res.send("event created!");
+const createEvent = async (req, res) => {
+  // TODO: handle validation of user input
+  const { body, currentUser } = req;
+  // const event = new Event(newEventData({ eventData: body, currentUser, timestamps: timestamps() }));
+  // const savedEvent = await event.save();
+
+  const savedEvent = await createNewEvent({ eventData: body, currentUser })
+  res.send({ data: returnEventData(savedEvent) });
 };
 
+const createComment = async (req, res) => {
+  const { body, currentUser } = req;
+  const comment = new Comment(newCommentData({ commentData: { text: body.text }, currentUser, timestamps: timestamps() }));
+  const savedComment = await comment.save()
+  // TODO:
+  // Handle possible failure event.
+  const commentSavedToEvent = await saveCommentToEvent(body, savedComment)
+  res.send({ data: { text: savedComment.text } })
+}
+
+const saveCommentToEvent = async ({ event_id }, savedComment) => {
+  const event = await Event.findById(event_id)
+  event.comments.push(savedComment)
+  console.log("event after push: ", event)
+  return await event.save()
+}
+
 module.exports = {
-  createEvent
+  createEvent,
+  createComment,
+  // Helper Methods Only!!!
+  createNewEvent
 };
+
+// ramda.compose attempt:
+// const inspect = (text) => (input) => {
+//     console.log(`${text}: ${input}`)
+//     console.dir(input)
+//   }
+//   const formatEventInput = ({ body, currentUser }) => ({ eventData: body, currentUser, timestamps: timestamps()})
+//   const newEvent = eventInput => new Event(eventInput)
+//   const saveEvent = async event => await event.save();
+// saveEvent in this pipeline is returning a promise... so returnEventData can't format the return result.
+// const create = async req => compose(inspect("after returnEventData Input"), returnEventData, inspect("after saveEvent Input"), await saveEvent, inspect("after newEvent Input"), newEvent, inspect("after newEventData Input"), newEventData, inspect("after formatEvent Input"), formatEventInput)(req)
