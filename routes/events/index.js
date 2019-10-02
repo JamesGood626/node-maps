@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { createEvent, createComment } = require("./service");
+const { createEvent, createComment, getEvent } = require("./service");
 
 const { authorizeRequest } = require("../middleware");
 
@@ -14,7 +14,8 @@ router.get("/", function(req, res, next) {
   // res.json({ data: {} })
 });
 
+router.get("/:eventId", getEvent);
 router.post("/", createEvent);
-router.post("/comment", createComment)
+router.post("/comment", createComment);
 
 module.exports = router;

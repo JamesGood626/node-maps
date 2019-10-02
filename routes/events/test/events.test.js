@@ -1,15 +1,15 @@
 const request = require("supertest");
 const app = require("../../../app");
 const mongoose = require("mongoose");
-const User = require('../../user/model/User')
-const Event = require('../model/Event')
-const { createNewEvent } = require('../service')
+const User = require("../../user/model/User");
+const Event = require("../model/Event");
+const { createNewEvent } = require("../service");
 
 const userSignupData = {
   username: "testUser",
   email: "test@test.com",
   password: "password"
-}
+};
 
 const firstEventData = {
   name: "First Event",
@@ -44,34 +44,53 @@ const eventData = {
 };
 
 const commentData = {
-  text: "What's up!",
+  text: "What's up!"
   // event_id should also be included
-}
+};
 
 let server;
 let agent;
-let event
+let event;
 
 beforeAll(async done => {
   server = app.listen();
   agent = request.agent(server);
-  const { id } = await agent.post("/api/users/signup").send(userSignupData)
-  event = await createNewEvent({ eventData: firstEventData, currentUser: { id }})
-  console.log("Created event in beforeAll: ", event)
-  console.dir(event)
-  done()
+  const {
+    body: { id }
+  } = await agent.post("/api/users/signup").send(userSignupData);
+  console.log("GOT ID: ", id);
+  event = await createNewEvent({
+    eventData: firstEventData,
+    currentUser: { id }
+  });
+  console.log("Created event in beforeAll: ", event);
+  console.dir(event);
+  done();
 });
 
 afterAll(async done => {
-  await User.deleteMany({})
-  await Event.deleteMany({})
+  await User.deleteMany({});
+  await Event.deleteMany({});
   mongoose.connection.close();
   server.close(done);
 });
 
 describe("User may make a request to Events' routes", function() {
-  test("POST '/events' should create event", async done => {
-    const {status, body: { data } } = await agent.post("/api/events/").send(eventData);
+  test("GET 'api/events/:eventId' should retrieve a single event associated with eventId", async done => {
+    const {
+      status,
+      body: { data }
+    } = await agent.get(`/api/events/${event._id}`).send(eventData);
+    expect(data.name).toBe("First Event");
+    expect(status).toBe(200);
+    done();
+  });
+
+  test("POST 'api/events' should create event", async done => {
+    const {
+      status,
+      body: { data }
+    } = await agent.post("/api/events/").send(eventData);
     expect(status).toBe(200);
     // TODO:
     // Could do a more comprehensive check to ensure that everything is on the data object.
@@ -80,13 +99,17 @@ describe("User may make a request to Events' routes", function() {
     done();
   });
 
-  test("POST '/events/comment should create event comment", async done => {
-    console.log("the event._id: ", event._id)
-    const {status, body: { data } } = await agent.post("/api/events/comment").send({ ...commentData, event_id: event._id });
-    expect(status).toBe(200)
-    expect(data.text).toBe(commentData.text)
-    done()
-  })
+  test("POST 'api/events/comment should create event comment", async done => {
+    const {
+      status,
+      body: { data }
+    } = await agent
+      .post("/api/events/comment")
+      .send({ ...commentData, event_id: event._id });
+    expect(status).toBe(200);
+    expect(data.text).toBe(commentData.text);
+    done();
+  });
 });
 
 // Example "POST '/events' should create event response.body.data result:"

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const AddressSchema = require("./Address");
-const {CommentSchema} = require("./Comment");
+const { CommentSchema } = require("./Comment");
 
 // NOTE: Dates must be updated like so in order to be
 // successfully persisted:
@@ -27,11 +27,27 @@ const {CommentSchema} = require("./Comment");
 // // In other words, the below query is equivalent to the above
 // await Book.find().select('title author').populate('author');
 
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["Point"],
+    required: true
+  },
+  coordinates: {
+    type: [Number],
+    required: true
+  }
+});
+
 const EventSchema = new Schema({
   name: { type: String, default: "", required: true },
   address: AddressSchema,
-  latitude: { type: Number, default: "", required: true },
-  longitude: { type: Number, default: "", required: true },
+  location: {
+    type: pointSchema,
+    required: true
+  },
+  // latitude: { type: Number, default: "", required: true },
+  // longitude: { type: Number, default: "", required: true },
   comments: [CommentSchema],
   // tags <- reference Tag or were we running w/ [Tags]
   user: { type: "ObjectId", ref: "User" },
