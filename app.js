@@ -49,7 +49,18 @@ app.use(
 app.use(passport.initialize());
 initializePassport(passport);
 
-app.use(cors());
+let whitelist = ['http://localhost:3000']
+let corsOptions = {
+  origin: function (origin,callback){
+    if (whitelist.indexOf(origin) !== -1){
+      callback(null,true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+app.use(cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

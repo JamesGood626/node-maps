@@ -1,6 +1,8 @@
 const Event = require("../model/Event");
 const { Comment } = require("../model/Comment");
 const { compose } = require("ramda");
+const axios = require('axios')
+
 
 const timestamps = () => {
   const date = new Date();
@@ -46,6 +48,31 @@ const returnEventData = ({
   comment
 });
 
+const makeOpenCageRequest = async ({eventData}) => {
+  const address = `${eventData.street},${eventData.zip},${eventData.city},${eventData.State}`
+  const url = `https://api.opencagedata.com/geocode/v1/json?q=${address}&key=${process.env.OPENCAGE_KEY}`
+
+  let result = await axios.get(url)
+  console.log('result from makereqeust: ', result.data.results[0].geometry)
+  const lat = result.data.results[0].geometry.lat
+  const lng = result.data.results[0].geometry.lng
+
+  newData = {
+      name: eventData.name,
+      address: {
+          street: eventData.street,
+          city: eventData.city,
+          state: eventData.state,
+          zip: eventData.zip
+      },
+      eventDate: eventData.date,
+      latitude: lat,
+      longitude: lng
+  }
+
+  return newData
+}
+
 const createNewEvent = async ({ eventData, currentUser }) => {
   console.log("eventData in createNewEvent: ", eventData);
   const eventInfo = newEventData({
@@ -90,8 +117,10 @@ const saveCommentToEvent = async ({ event_id }, savedComment) => {
 // But we'll spread timestamps on the body, and nested comment object.
 const createEvent = async (req, res) => {
   // TODO: handle validation of user input
+  console.log('hitting here')
   const { body, currentUser } = req;
-  const savedEvent = await createNewEvent({ eventData: body, currentUser });
+  const convertedAddress = await makeOpenCageRequest({eventData: body})
+  const savedEvent = await createNewEvent({ eventData: convertedAddress, currentUser });
   res.send({ data: returnEventData(savedEvent) });
 };
 
