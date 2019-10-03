@@ -14,6 +14,10 @@ router.get("/", function(req, res, next) {
   // res.json({ data: {} })
 });
 
+router.post("/test", (req, res) => {
+  console.log("the incoming request to '/api/events/test': ", req.body);
+  res.send({ data: "Responded!" });
+});
 router.get("/:eventId", getEvent);
 router.post("/", createEvent);
 router.post("/comment", createComment);

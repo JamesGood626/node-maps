@@ -1,8 +1,7 @@
 const Event = require("../model/Event");
 const { Comment } = require("../model/Comment");
 const { compose } = require("ramda");
-const axios = require('axios')
-
+const axios = require("axios");
 
 const timestamps = () => {
   const date = new Date();
@@ -22,7 +21,7 @@ const newEventData = ({
     ...timestamps,
     location: { type: "Point", coordinates: [latitude, longitude] },
     user: currentUser.id,
-    comments: [{ ...rest.comment, ...timestamps, user: currentUser.id }]
+    comments: [{ text: rest.comment, ...timestamps, user: currentUser.id }]
   };
 };
 
@@ -48,30 +47,30 @@ const returnEventData = ({
   comment
 });
 
-const makeOpenCageRequest = async ({eventData}) => {
-  const address = `${eventData.street},${eventData.zip},${eventData.city},${eventData.State}`
-  const url = `https://api.opencagedata.com/geocode/v1/json?q=${address}&key=${process.env.OPENCAGE_KEY}`
+const makeOpenCageRequest = async ({ eventData }) => {
+  const address = `${eventData.street},${eventData.zip},${eventData.city},${eventData.state}`;
+  const url = `https://api.opencagedata.com/geocode/v1/json?q=${address}&key=${process.env.OPENCAGE_KEY}`;
 
-  let result = await axios.get(url)
-  console.log('result from makereqeust: ', result.data.results[0].geometry)
-  const lat = result.data.results[0].geometry.lat
-  const lng = result.data.results[0].geometry.lng
+  let result = await axios.get(url);
+  console.log("result from makereqeust: ", result.data.results[0].geometry);
+  const lat = result.data.results[0].geometry.lat;
+  const lng = result.data.results[0].geometry.lng;
 
-  newData = {
-      name: eventData.name,
-      address: {
-          street: eventData.street,
-          city: eventData.city,
-          state: eventData.state,
-          zip: eventData.zip
-      },
-      eventDate: eventData.date,
-      latitude: lat,
-      longitude: lng
-  }
+  // newData = {
+  //   name: eventData.name,
+  //   address: {
+  //     street: eventData.street,
+  //     city: eventData.city,
+  //     state: eventData.state,
+  //     zip: eventData.zip
+  //   },
+  //   eventDate: eventData.eventDate,
+  //   latitude: lat,
+  //   longitude: lng
+  // };
 
-  return newData
-}
+  return { lat, lng };
+};
 
 const createNewEvent = async ({ eventData, currentUser }) => {
   console.log("eventData in createNewEvent: ", eventData);
@@ -117,10 +116,15 @@ const saveCommentToEvent = async ({ event_id }, savedComment) => {
 // But we'll spread timestamps on the body, and nested comment object.
 const createEvent = async (req, res) => {
   // TODO: handle validation of user input
-  console.log('hitting here')
+  console.log("hitting here");
   const { body, currentUser } = req;
-  const convertedAddress = await makeOpenCageRequest({eventData: body})
-  const savedEvent = await createNewEvent({ eventData: convertedAddress, currentUser });
+  console.log("the body in createEvent: ", body);
+  const { lat, lng } = await makeOpenCageRequest({ eventData: body });
+  // console.log("the convertedAddress in createEvent: ", convertedAddress);
+  const savedEvent = await createNewEvent({
+    eventData: { ...body, latitude: lat, longitude: lng },
+    currentUser
+  });
   res.send({ data: returnEventData(savedEvent) });
 };
 
@@ -142,8 +146,8 @@ const createComment = async (req, res) => {
 
 // List all events within a given radius
 const listEvents = async (req, res) => {
-  // https://docs.mongodb.com/manual/geospatial-queries/
-  // Found from: https://mongoosejs.com/docs/geojson.html
+  // 1. https://docs.mongodb.com/manual/geospatial-queries/
+  // Found from: 2. https://mongoosejs.com/docs/geojson.html
   // Event.find({
   //   location: {
   //     $geoWithin: {
@@ -151,7 +155,7 @@ const listEvents = async (req, res) => {
   //     }
   //   }
   // })
-  // Found from: https://stackoverflow.com/questions/25734092/query-locations-within-a-radius-in-mongodb
+  // Found from: 3. https://stackoverflow.com/questions/25734092/query-locations-within-a-radius-in-mongodb
   // var query = {
   //   "loc" : {
   //       $geoWithin : {

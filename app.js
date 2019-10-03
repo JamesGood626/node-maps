@@ -34,7 +34,6 @@ app.use(
   cookieSession({
     name: "session",
     keys: [process.env.COOKIE_KEY],
-
     // Cookie Options
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   })
@@ -49,18 +48,12 @@ app.use(
 app.use(passport.initialize());
 initializePassport(passport);
 
-let whitelist = ['http://localhost:3000']
-let corsOptions = {
-  origin: function (origin,callback){
-    if (whitelist.indexOf(origin) !== -1){
-      callback(null,true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
-}
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    credentials: true,
+    origin: "http://localhost:3000"
+  })
+);
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
