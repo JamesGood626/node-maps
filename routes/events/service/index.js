@@ -3,6 +3,11 @@ const { Comment } = require("../model/Comment");
 const { compose } = require("ramda");
 const axios = require("axios");
 
+const milesToRadian = (miles) => {
+  const radiusInMiles = 3959
+  return miles / radiusInMiles
+}
+
 const timestamps = () => {
   const date = new Date();
   return { createdAt: date, updatedAt: date };
@@ -146,6 +151,28 @@ const createComment = async (req, res) => {
 
 // List all events within a given radius
 const listEvents = async (req, res) => {
+  console.log('inside listEvents')
+  const { lat, lng } = req.body
+  try {
+    Event.find({
+      location: {
+        $near: {
+          $maxDistance: 1000,
+          $geometry: {
+            coordinates: [lat, lng],
+            type: 'Point'
+          }
+        }
+      }
+    }).find((error, results) => {
+      if (error) console.log(error)
+      console.log(JSON.stringify(results))
+    })
+  }
+  catch (error) {
+    console.log(error)
+  }
+
   // 1. https://docs.mongodb.com/manual/geospatial-queries/
   // Found from: 2. https://mongoosejs.com/docs/geojson.html
   // Event.find({
