@@ -3,9 +3,9 @@ const { Comment } = require("../model/Comment");
 const { compose } = require("ramda");
 const axios = require("axios");
 
-const milesToRadian = (miles) => {
-  const radiusInMiles = 3959
-  return miles / radiusInMiles
+const milesToMeters = (miles) => {
+  const metersInMiles = 1609.34
+  return miles * metersInMiles
 }
 
 const timestamps = () => {
@@ -61,20 +61,21 @@ const makeOpenCageRequest = async ({ eventData }) => {
   const lat = result.data.results[0].geometry.lat;
   const lng = result.data.results[0].geometry.lng;
 
-  // newData = {
-  //   name: eventData.name,
-  //   address: {
-  //     street: eventData.street,
-  //     city: eventData.city,
-  //     state: eventData.state,
-  //     zip: eventData.zip
-  //   },
-  //   eventDate: eventData.eventDate,
-  //   latitude: lat,
-  //   longitude: lng
-  // };
+  newData = {
+    name: eventData.name,
+    address: {
+      street: eventData.street,
+      city: eventData.city,
+      state: eventData.state,
+      zip: eventData.zip
+    },
+    latitude: lat,
+    longitude: lng,
+    eventDate: eventData.eventDate,
+    comment: eventData.comment
+  };
 
-  return { lat, lng };
+  return newData
 };
 
 const createNewEvent = async ({ eventData, currentUser }) => {
@@ -124,10 +125,10 @@ const createEvent = async (req, res) => {
   console.log("hitting here");
   const { body, currentUser } = req;
   console.log("the body in createEvent: ", body);
-  const { lat, lng } = await makeOpenCageRequest({ eventData: body });
+  const newData = await makeOpenCageRequest({ eventData: body });
   // console.log("the convertedAddress in createEvent: ", convertedAddress);
   const savedEvent = await createNewEvent({
-    eventData: { ...body, latitude: lat, longitude: lng },
+    eventData: newData,
     currentUser
   });
   res.send({ data: returnEventData(savedEvent) });
@@ -151,14 +152,13 @@ const createComment = async (req, res) => {
 
 // List all events within a given radius
 const listEvents = async (req, res) => {
-  console.log('inside listEvents: ', req.query)
   const { lat, lng } = req.query
-  console.log(lat, lng)
+  const distance = milesToMeters(25)
   try {
     Event.find({
       location: {
         $near: {
-          $maxDistance: 1000,
+          $maxDistance: distance,
           $geometry: {
             coordinates: [lat, lng],
             type: 'Point'
