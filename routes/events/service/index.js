@@ -151,8 +151,9 @@ const createComment = async (req, res) => {
 
 // List all events within a given radius
 const listEvents = async (req, res) => {
-  console.log('inside listEvents')
-  const { lat, lng } = req.body
+  console.log('inside listEvents: ', req.query)
+  const { lat, lng } = req.query
+  console.log(lat, lng)
   try {
     Event.find({
       location: {
@@ -166,7 +167,9 @@ const listEvents = async (req, res) => {
       }
     }).find((error, results) => {
       if (error) console.log(error)
-      console.log(JSON.stringify(results))
+      let events = results
+      console.log(events)
+      res.send({events})
     })
   }
   catch (error) {
