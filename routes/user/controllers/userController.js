@@ -39,7 +39,7 @@ module.exports = {
                             username: createdUser.username
                         }
                         jwt.sign(payload, process.env.SECRET_KEY, {
-                            expiresIn: 3600
+                            expiresIn: 8000
                         }, (err, token) => {
                             if(err){
                                 let error = {}
